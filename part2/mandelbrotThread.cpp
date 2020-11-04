@@ -63,7 +63,6 @@ void workerThreadStart(WorkerArgs *const args)
     startRow[0] = (args->threadId)*workload;
     for(int i = 1; i < count; i++){
     	startRow[i] = startRow[i-1] + workload * (args->numThreads);
-    	printf("%d startRow:%d\n", args->threadId, startRow[i]);
     }
     int numRows = workload;
     //printf("%d numRow:%d\n", args->threadId, numRows);
