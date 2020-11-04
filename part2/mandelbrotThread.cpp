@@ -47,23 +47,30 @@ void workerThreadStart(WorkerArgs *const args)
     //printf("%d width:%d\n", args->threadId, width);
     int height = args->height;
     //printf("%d height:%d\n", args->threadId, height);
-    int workload = (args->height)/(args->numThreads)/4;
-    int startRow_1 = (args->threadId)*workload;
-    int startRow_2 = startRow_1 + workload * (args->numThreads);
-    int startRow_3 = startRow_2 + workload * (args->numThreads);
-    int startRow_4 = startRow_3 + workload * (args->numThreads);
-    int numRows = workload;
-    //printf("%d numRow:%d\n", args->threadId, numRows);
     int maxIterations = args->maxIterations;
     //printf("%d maxIteration:%d\n", args->threadId, maxIterations);
     int* output = args->output;
     //printf("%d output:%p\n", args->threadId, output);
-    
-/*---------------------------do------------------------------------*/    
-    mandelbrotSerial(x0, y0, x1, y1, width, height, startRow_1, numRows, maxIterations, output);
-    mandelbrotSerial(x0, y0, x1, y1, width, height, startRow_2, numRows, maxIterations, output);
-    mandelbrotSerial(x0, y0, x1, y1, width, height, startRow_3, numRows, maxIterations, output);
-    mandelbrotSerial(x0, y0, x1, y1, width, height, startRow_4, numRows, maxIterations, output);
+/*----------------------------modify-------------------------------*/
+    int workload = (args->height)/(args->numThreads);
+    for(;;){
+    	if(workload % 2 == 0)
+    		workload /= 2;
+    	else break;
+    }
+    int count = (args->height) / workload / args->numThreads;
+    int startRow[count];
+    startRow[0] = (args->threadId)*workload;
+    printf("%d startRow:%d\n", args->threadId, startRow[0]);
+    for(int i = 1; i < count; i++){
+    	startRow[i] = startRow[i-1] + workload * (args->numThreads);
+    	printf("%d startRow:%d\n", args->threadId, startRow[i]);
+    }
+    int numRows = workload;
+    //printf("%d numRow:%d\n", args->threadId, numRows);
+    for(int i = 0; i < count; i++)
+    	mandelbrotSerial(x0, y0, x1, y1, width, height, startRow[i], numRows, maxIterations, output);
+/*----------------------------modify-------------------------------*/    
     double endTime = CycleTimer::currentSeconds();
     printf("thread %d time:%fms\n",args->threadId, endTime - startTime);
 }
