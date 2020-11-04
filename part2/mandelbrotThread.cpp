@@ -120,15 +120,9 @@ void mandelbrotThread(
     
     for (int i = 1; i < numThreads; i++)
     {
-    	//double startTime = CycleTimer::currentSeconds();
         workers[i] = std::thread(workerThreadStart, &args[i]);
-        //double endTime = CycleTimer::currentSeconds();
-        //printf("thread %d time:%fms\n", i, endTime - startTime);
-    }
-    //double startTime = CycleTimer::currentSeconds();	
+    }	
     workerThreadStart(&args[0]);
-    //double endTime = CycleTimer::currentSeconds();
-    //printf("thread 0 time:%fms\n", endTime - startTime);
     // join worker threads
     for (int i = 1; i < numThreads; i++)
     {
