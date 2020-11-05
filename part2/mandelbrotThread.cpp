@@ -52,7 +52,16 @@ void workerThreadStart(WorkerArgs *const args)
     int* output = args->output;
     //printf("%d output:%p\n", args->threadId, output);
 /*----------------------------modify-------------------------------*/
+    int remainder = (args->height) % (args->numThreads);
     int workload = (args->height)/(args->numThreads);
+    if(remainder != 0){
+        int workload_end = workload + remainder;
+        int startRow = (args->threadId) * workload;
+        int numRows = workload;
+        if(args->threadId == args->numThreads-1)
+            numRows = workload + remainder;
+        mandelbrotSerial(x0, y0, x1, y1, width, height, startRow, numRows, maxIterations, output);
+    }
     for(;;){
     	if(workload % 2 == 0)
     		workload /= 2;
