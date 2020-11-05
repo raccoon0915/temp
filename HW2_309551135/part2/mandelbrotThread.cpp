@@ -59,7 +59,7 @@ void workerThreadStart(WorkerArgs *const args)
         int startRow = (args->threadId) * workload;
         int numRows = workload;
         if(args->threadId == args->numThreads-1)
-            numRows = workload + remainder;
+            numRows = workload_end;
         mandelbrotSerial(x0, y0, x1, y1, width, height, startRow, numRows, maxIterations, output);
     }
     for(;;){
