@@ -22,12 +22,38 @@ void pageRank(Graph g, double *solution, double damping, double convergence)
   // precision scores are used to avoid underflow for large graphs
 
   int numNodes = num_nodes(g);
+  int converged = 0;
+  double *score_old, *score_new;
+  score_old = (double*)malloc(sizeof(double)*num_nodes(g));
+  score_new = (double*)malloc(sizeof(double)*num_nodes(g));
   double equal_prob = 1.0 / numNodes;
   for (int i = 0; i < numNodes; ++i)
   {
-    solution[i] = equal_prob;
+    solution[i] = 0.0;
+    score_old[i] = equal_prob;
   }
-
+  while(!converged){
+    for(int i = 0; i < numNodes; i++){/*raccoon:i < numNodes*/
+      const Vertex* start = incoming_begin(g, i);
+      const Vertex* end = incoming_end(g, i);
+      for(const Vertex* j = start; j != end; j++){
+        solution[i] += score_old[*j] / (double)outgoing_size(g, *j);
+        //printf("%lf\n", score_new[i]);
+      }
+      solution[i] = (double)damping * solution[i] + (1.0 - damping) / (double)numNodes;
+      //printf("%lf\n", score_new[i]);
+      for(int k = 0; k < numNodes; k++){
+      	if(outgoing_size(g, k) == 0)
+      	  solution[i] += (double)damping * score_old[k] / (double)numNodes;
+      }
+    }
+    double global_diff = 0;
+    for(int i = 0; i < numNodes; i++)
+      global_diff += abs(solution[i] - score_old[i]);
+    converged = (global_diff < convergence);
+  }
+  free(score_old);
+  free(score_new);
   /*
      For PP students: Implement the page rank algorithm here.  You
      are expected to parallelize the algorithm using openMP.  Your
