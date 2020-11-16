@@ -23,7 +23,6 @@ void conj_grad(int colidx[],
     //---------------------------------------------------------------------
     // Initialize the CG algorithm:
     //---------------------------------------------------------------------
-    #pragma omp parallel for
     for (j = 0; j < naa + 1; j++)
     {
         q[j] = 0.0;
@@ -49,6 +48,7 @@ void conj_grad(int colidx[],
     //---->
     //---------------------------------------------------------------------
     for (cgit = 1; cgit <= cgitmax; cgit++)
+    //for(cgit = 1; cgit <= 1; cgit++)
     {
         //---------------------------------------------------------------------
         // q = A.p
@@ -61,16 +61,19 @@ void conj_grad(int colidx[],
         //       unrolled-by-two version is some 10% faster.
         //       The unrolled-by-8 version below is significantly faster
         //       on the Cray t3d - overall speed of code is 1.5 times faster.
+        /*raccoon:1853104 iterations*/
+        #pragma omp parallel for schedule(dynamic, 50)
         for (j = 0; j < lastrow - firstrow + 1; j++)
+        //for(j = 0; j < 3; j++)
         {
-            sum = 0.0;
+            sum = 0.0; 
             for (k = rowstr[j]; k < rowstr[j + 1]; k++)
             {
+                //printf("k=%d\n", k);
                 sum = sum + a[k] * p[colidx[k]];
             }
             q[j] = sum;
         }
-
         //---------------------------------------------------------------------
         // Obtain p.q
         //---------------------------------------------------------------------
@@ -79,7 +82,6 @@ void conj_grad(int colidx[],
         {
             d = d + p[j] * q[j];
         }
-
         //---------------------------------------------------------------------
         // Obtain alpha = rho / (p.q)
         //---------------------------------------------------------------------
@@ -544,7 +546,6 @@ void init(double *zeta)
     //      Shift the col index vals from actual (firstcol --> lastcol )
     //      to local, i.e., (0 --> lastcol-firstcol)
     //---------------------------------------------------------------------
-    #pragma omp parallel for
     for (j = 0; j < lastrow - firstrow + 1; j++)
     {
         for (k = rowstr[j]; k < rowstr[j + 1]; k++)
@@ -585,7 +586,6 @@ void iterate(double *zeta, int *it)
     //---------------------------------------------------------------------
     norm_temp1 = 0.0;
     norm_temp2 = 0.0;
-    #pragma omp parallel for
     for (j = 0; j < lastcol - firstcol + 1; j++)
     {
         norm_temp1 = norm_temp1 + x[j] * z[j];
