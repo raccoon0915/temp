@@ -32,6 +32,7 @@ void pageRank(Graph g, double *solution, double damping, double convergence)
     solution[i] = 0.0;
     score_old[i] = equal_prob;
   }
+  
   while(!converged){
     for(int i = 0; i < numNodes; i++){/*raccoon:i < numNodes*/
       const Vertex* start = incoming_begin(g, i);

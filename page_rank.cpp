@@ -23,35 +23,40 @@ void pageRank(Graph g, double *solution, double damping, double convergence)
 
   int numNodes = num_nodes(g);
   int converged = 0;
-  double *score_old, *score_new;
+  double *score_old;
+  score_old = (double*)malloc(sizeof(double)*num_nodes(g));
   double equal_prob = 1.0 / numNodes;
   for (int i = 0; i < numNodes; ++i)
   {
-    solution[i] = equal_prob;
+    solution[i] = 0.0;
+    score_old[i] = equal_prob;
   }
-  for(int i = 0; i < numNodes; i++)
-  {
-    score_old[i] = 1/numNodes;
-    score_new[i] = 0;
-  }
-  while(!converged){
-    for(int i = 0; i < numNodes; i++){
+  //while(!converged){
+    for(int i = 0; i < numNodes; i++){/*raccoon:i < numNodes*/
       const Vertex* start = incoming_begin(g, i);
       const Vertex* end = incoming_end(g, i);
       for(const Vertex* j = start; j != end; j++){
-        score_new[i] += score_old[*j] / outgoing_size(g, *j);
+        solution[i] += score_old[*j] / (double)outgoing_size(g, *j);
+        //printf("%.10lf\n", solution[i]);
       }
-      score_new[i] = damping * score_new[i] + (1.0 - damping) / numNodes;
+      solution[i] = damping * solution[i] + (1.0 - damping) / (double)numNodes;
+      double temp =0.0;
       for(int k = 0; k < numNodes; k++){
-      	if(outgoing_size(g, k) == 0)
-      	  score_new[i] += damping * score_old[k] / numNodes;
+      	//printf("%d\n", outgoing_size(g, k));
+      	if(outgoing_size(g, k) == 0){
+      	  temp += damping * score_old[k] / (double)numNodes;
+      	 }
+      	 //printf("%.10lf\n", temp);
       }
+      solution[i] += temp;
+      //printf("%.10lf\n", solution[i]);
     }
-    int global_diff = 0;
-    for(int i = 0; i < numNodes; i++)
-      global_diff += abs(score_new[i] - score_old[i]);
+    double global_diff = 0;
+    for(int i = 0; i < numNodes; i++)/*raccoon: i < numNodes*/
+      global_diff += abs(solution[i] - score_old[i]);
     converged = (global_diff < convergence);
-  }
+  //}
+  free(score_old);
   /*
      For PP students: Implement the page rank algorithm here.  You
      are expected to parallelize the algorithm using openMP.  Your
