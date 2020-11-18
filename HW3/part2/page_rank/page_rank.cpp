@@ -26,13 +26,14 @@ void pageRank(Graph g, double *solution, double damping, double convergence)
   double *score_old;
   score_old = (double*)malloc(sizeof(double)*num_nodes(g));
   double equal_prob = 1.0 / numNodes;
+  #pragma omp parallel for schedule(dynamic, 50)
   for (int i = 0; i < numNodes; ++i)
   {
     solution[i] = 0.0;
     score_old[i] = equal_prob;
   }
   while(!converged){
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(dynamic, 50)
     for(int i = 0; i < numNodes; i++){/*raccoon:i < numNodes*/
       const Vertex* start = incoming_begin(g, i);
       const Vertex* end = incoming_end(g, i);
@@ -40,20 +41,20 @@ void pageRank(Graph g, double *solution, double damping, double convergence)
         solution[i] += score_old[*j] / (double)outgoing_size(g, *j);
         //printf("round:%d %.10lf\n", round, solution[i]);
       }
-    
-     
       solution[i] = damping * solution[i] + (1.0 - damping) / (double)numNodes;
-      double temp =0.0;
-      for(int k = 0; k < numNodes; k++){
-      	//printf("%d\n", outgoing_size(g, k));
-      	if(outgoing_size(g, k) == 0){
-      	  temp += damping * score_old[k] / (double)numNodes;
-      	 }
-      	 //printf("%.10lf\n", temp);
+    }
+    double temp =0.0;
+    for(int k = 0; k < numNodes; k++){
+ 	//printf("%d\n", outgoing_size(g, k));
+      if(outgoing_size(g, k) == 0){
+    	temp += damping * score_old[k] / (double)numNodes;
       }
+      	 //printf("%.10lf\n", temp);
+    }
+    #pragma omp parallel for schedule(dynamic, 50)
+    for(int i = 0; i < numNodes; i++)
       solution[i] += temp;
       //printf("round:%d %.10lf\n", round, solution[i]);
-    }
     double global_diff = 0;
     for(int i = 0; i < numNodes; i++)/*raccoon: i < numNodes*/
       global_diff += abs(solution[i] - score_old[i]);
