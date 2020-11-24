@@ -5,19 +5,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <math.h>
-void merge(long long int sub_result, int world_size, int world_rank){
-   world_size /= 2;
-   world_rank /= 2;
-   MPI_Send(&sub_result, 1, MPI_LONG_LONG, world_rank, 0, MPI_COMM_WORLD);
-   if(world_size == 2)return;
-   if(world_rank < world_size){
-      long long int temp_a = 0, temp_b = 0, temp_result = 0;
-      MPI_Recv(&temp_a, 1, MPI_LONG_LONG, world_rank * 2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      MPI_Recv(&temp_b, 1, MPI_LONG_LONG, world_rank * 2 + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      temp_result = temp_a + temp_b;
-      merge(temp_result, world_size, world_rank);
-   }
-}
 long long int Monte_Carlo(long long int toss, int rank){
    double x, y, distance;
    unsigned seed = (unsigned)time(NULL) * rank;
@@ -46,21 +33,36 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
     long long int count = tosses / world_size;
     long long int number_in_circle = 0;
-    
+    long long int *result = (long long int*)malloc(sizeof(long long int) * world_size);
+    int height = log(world_size) / log(2);
     // TODO: binary tree redunction
-    if(world_rank > 0){
-       long long int temp = 0;
-       temp = Monte_Carlo(count, world_rank);
-       merge(temp, world_size, world_rank); 
+    if(world_rank % 2 == 0){
+       long long int temp_even;
+       temp_even = Monte_Carlo(count, world_rank);
+       result[world_rank] = temp_even;
+    }
+    else{
+       long long int temp_odd;
+       temp_odd = Monte_Carlo(count, world_rank);
+       MPI_Send(&temp_odd, 1, MPI_LONG_LONG, world_rank - 1, 0, MPI_COMM_WORLD);
+    }
+    for(int i = 1; i < height; i++){
+       if(world_rank % (int)pow(2, i) == 0){/*raccoon:*/
+          long long int temp;
+          MPI_Recv(&temp, 1, MPI_LONG_LONG, world_rank + pow(2, i-1), 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+          result[world_rank] += temp;
+          if(i == 3 && world_rank == (world_size / 2))
+              break;
+          if(world_rank % (int)pow(2, i+1) != 0)
+             MPI_Send(&result[world_rank], 1, MPI_LONG_LONG, world_rank - pow(2, i), 0, MPI_COMM_WORLD);
+       }
+       
     }
     if (world_rank == 0)
     {
         // TODO: PI result
-        long long int temp_a = 0, temp_b = 0, temp_result = 0;
-        MPI_Recv(&temp_a, 1, MPI_LONG_LONG, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&temp_b, 1, MPI_LONG_LONG, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        temp_result = temp_a + temp_b;
-        pi_result = 4 * temp_result / ((double)tosses);
+        number_in_circle = result[0] + result[world_size / 2];
+        pi_result = 4 * number_in_circle / ((double)tosses);
         // --- DON'T TOUCH ---
         double end_time = MPI_Wtime();
         printf("%lf\n", pi_result);
