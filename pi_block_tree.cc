@@ -51,8 +51,9 @@ int main(int argc, char **argv)
           long long int temp;
           MPI_Recv(&temp, 1, MPI_LONG_LONG, world_rank + pow(2, i-1), 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
           result[world_rank] += temp;
-          if(i == 3 && world_rank == (world_size / 2))
-              break;
+          if(i == height-1 && world_rank == (world_size / 2)){
+             MPI_Send(&result[world_rank], 1, MPI_LONG_LONG, world_rank - pow(2, i), 0, MPI_COMM_WORLD);
+          }
           if(world_rank % (int)pow(2, i+1) != 0)
              MPI_Send(&result[world_rank], 1, MPI_LONG_LONG, world_rank - pow(2, i), 0, MPI_COMM_WORLD);
        }
@@ -61,6 +62,9 @@ int main(int argc, char **argv)
     if (world_rank == 0)
     {
         // TODO: PI result
+        long long int temp;
+        MPI_Recv(&temp, 1, MPI_LONG_LONG, world_size/2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        number_in_circle = temp + result[0];
         number_in_circle = result[0] + result[world_size / 2];
         pi_result = 4 * number_in_circle / ((double)tosses);
         // --- DON'T TOUCH ---
