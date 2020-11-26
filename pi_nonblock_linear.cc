@@ -58,6 +58,9 @@ int main(int argc, char **argv)
         for(int i = 1; i < world_size; i++)
            MPI_Irecv(&result[i], 1, MPI_LONG_LONG, i, 0, MPI_COMM_WORLD,&requests[i-1]);
         MPI_Waitall(world_size-1, requests, status);
+        for(int i = 0; i < world_size; i++)
+           number_in_circle += result[i];
+        pi_result = 4 * number_in_circle / ((double)tosses);
         // --- DON'T TOUCH ---
         double end_time = MPI_Wtime();
         printf("%lf\n", pi_result);
