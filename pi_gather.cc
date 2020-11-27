@@ -36,14 +36,14 @@ int main(int argc, char **argv)
     long long int number_in_circle;
     long long int sub_result, *r_buffer;/*raccoon:rank=0 no need to send*/
     r_buffer = (long long int*)malloc(sizeof(long long int) * world_size);    
+    // TODO: use MPI_Gather
     if(world_rank > 0){
        sub_result = Monte_Carlo(count, world_rank);
        r_buffer[world_rank] = sub_result;
+       MPI_Gather(&sub_result, 1, MPI_LONG_LONG, r_buffer, world_size - 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD);
     }
     else
        r_buffer[world_rank] = Monte_Carlo(count_last, world_rank);
-    // TODO: use MPI_Gather
-    MPI_Gather(&sub_result, 1, MPI_LONG_LONG, r_buffer, world_size - 1, MPI_LONG_LONG, 0, MPI_COMM_WORLD);
     if (world_rank == 0)
     {
         // TODO: PI result
