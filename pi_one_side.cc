@@ -20,6 +20,24 @@ long long int Monte_Carlo(long long int tosses, int rank){
     }
     return sum;
 }
+int fnz (long long int *schedule, long long int *oldschedule, int size)
+{
+    int diff = 0;
+    for (int i = 0; i < size; i++)
+       diff |= (schedule[i] != oldschedule[i]);
+
+    if (diff)
+    {
+       int res = 0;
+       for (int i = 0; i < size; i++)
+       {
+          res += schedule[i];
+          oldschedule[i] = schedule[i];
+       }
+       return(res == size-1);
+    }
+    return 0;
+}
 int main(int argc, char **argv)
 {
     // --- DON'T TOUCH ---
@@ -41,38 +59,39 @@ int main(int argc, char **argv)
     if (world_rank == 0)
     {
         // Master
-        long long int *result;
-        long long int sub_result;
-        MPI_Alloc_mem(world_size * sizeof(long long int), MPI_INFO_NULL, &result);
-        MPI_Win_create(result, world_size * sizeof(long long int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-        result[world_rank] = Monte_Carlo(count_last, world_rank);
+        long long int *oldschedule = (long long int*)malloc(world_size * sizeof(long long int));
+        long long int *schedule;
+        MPI_Alloc_mem(2 * world_size * sizeof(long long int), MPI_INFO_NULL, &schedule);
+        for(int i = 0; i < world_size; i++){
+           schedule[i] = 0;
+           oldschedule[i] = -1;
+        }
+        MPI_Win_create(schedule, 2 * world_size * sizeof(long long int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
         int ready = 0;
-        while(!ready)
+        while (!ready)
         {
-           int check = 0;
-           for(int i = 0; i < world_size; i++){
-              if(result[i] > 0)
-                 check++;
-              if(check == world_size)
-                 ready = 1;
-           }
+           MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
+           ready = fnz(schedule, oldschedule, world_size);
+           MPI_Win_unlock(0, win);
         }
         for(int i = 0; i < world_size; i++)
-           number_in_circle += result[i];
+           number_in_circle += schedule[i + world_size];
         MPI_Win_free(&win);
-        MPI_Free_mem(result);
+        MPI_Free_mem(schedule);
     }
     else
     {
         // Workers
         long long int sub_result;
-        sub_result = Monte_Carlo(count_last, world_rank);
+        long long int one = 1;
+        sub_result = Monte_Carlo(count, world_rank);
         MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-        MPI_Put(&sub_result, 1, MPI_LONG_LONG, 0, world_rank, 1, MPI_LONG_LONG, win);
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
+        MPI_Put(&one, 1, MPI_LONG_LONG, 0, world_rank, 1, MPI_LONG_LONG, win);
+        MPI_Put(&sub_result, 1, MPI_LONG_LONG, 0, world_rank + world_size, 1, MPI_LONG_LONG, win);
+        MPI_Win_unlock(0, win);
         MPI_Win_free(&win);
     }
-
-    MPI_Win_free(&win);
 
     if (world_rank == 0)
     {
