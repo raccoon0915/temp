@@ -5,13 +5,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <math.h>
+const float AVG_SCALE_FACTOR = 1.f / RAND_MAX;
 long long int Monte_Carlo(long long int toss, int rank){
    double x, y, distance;
    unsigned seed = (unsigned)time(NULL) * rank;
    long long int sum = 0;
    for(int i = 0; i < toss; i++){
-      x = (double)rand_r(&seed) / RAND_MAX * 2 - 1;
-      y = (double)rand_r(&seed) / RAND_MAX * 2 - 1;
+      x = (double)rand_r(&seed) * AVG_SCALE_FACTOR * 2 - 1;
+      y = (double)rand_r(&seed) * AVG_SCALE_FACTOR * 2 - 1;
       distance = sqrt(x * x + y * y);
       if(distance <= 1)
          sum++;
@@ -62,10 +63,13 @@ int main(int argc, char **argv)
     if (world_rank == 0)
     {
         // TODO: PI result
-        long long int temp;
-        MPI_Recv(&temp, 1, MPI_LONG_LONG, world_size/2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        number_in_circle = temp + result[0];
-        number_in_circle = result[0] + result[world_size / 2];
+	if(world_size == 1)
+	   number_in_circle = result[world_rank];
+	else{
+           long long int temp;
+           MPI_Recv(&temp, 1, MPI_LONG_LONG, world_size/2, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+           number_in_circle = temp + result[0];
+	}
         pi_result = 4 * number_in_circle / ((double)tosses);
         // --- DON'T TOUCH ---
         double end_time = MPI_Wtime();

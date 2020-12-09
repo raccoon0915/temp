@@ -22,18 +22,14 @@ long long int Monte_Carlo(long long int tosses, int rank){
 }
 int fnz (long long int *schedule, int size)
 {
-    int diff = 0;
-    if (diff)
+    int res = 0;
+    for (int i = 0; i < size; i++)
     {
-       int res = 0;
-       for (int i = 0; i < size; i++)
-       {
-          if(schedule[i] != 0)
-             res++;
-       }
-       return(res == size-1);
+       if(schedule[i] != 0)
+          res++;
+       // printf("schedule[%d]:%lld\n", i, schedule[i]);
     }
-    return 0;
+    return(res == size);
 }
 int main(int argc, char **argv)
 {
@@ -56,24 +52,23 @@ int main(int argc, char **argv)
     if (world_rank == 0)
     {
         // Master
-        long long int *oldschedule = (long long int*)malloc(world_size * sizeof(long long int));
         long long int *schedule;
         MPI_Alloc_mem(world_size * sizeof(long long int), MPI_INFO_NULL, &schedule);
         for(int i = 0; i < world_size; i++)
         {
            schedule[i] = 0;
         }
-        MPI_Win_create(schedule, world_size * sizeof(long long int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+        MPI_Win_create(schedule, world_size * sizeof(long long int), sizeof(long long int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
         schedule[world_rank] = Monte_Carlo(count_last, world_rank);
         int ready = 0;
         while (!ready)
         {
            MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
            ready = fnz(schedule, world_size);
-           MPI_Win_unlock(0, win);
+	   MPI_Win_unlock(0, win);
         }
         for(int i = 0; i < world_size; i++)
-           number_in_circle += schedule[i + world_size];
+           number_in_circle += schedule[i];
         MPI_Win_free(&win);
         MPI_Free_mem(schedule);
     }
@@ -82,10 +77,10 @@ int main(int argc, char **argv)
         // Workers
         long long int sub_result;
         sub_result = Monte_Carlo(count, world_rank);
-        MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
-        MPI_Put(&sub_result, 1, MPI_LONG_LONG, 0, world_rank, 1, MPI_LONG_LONG, win);
-        MPI_Win_unlock(0, win);
+	MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+	MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
+	MPI_Put(&sub_result, 1, MPI_LONG_LONG, 0, world_rank, 1, MPI_LONG_LONG, win);
+	MPI_Win_unlock(0, win);
         MPI_Win_free(&win);
     }
 
