@@ -67,7 +67,7 @@ void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr,
 }
 void matrix_multiply(const int n, const int m, const int l,
                      const int *a_mat, const int *b_mat){
-   int *result = (int*)malloc(sizeof(int)*n*l);
+   double *result = (double*)malloc(sizeof(double)*n*l);
    for(int i = 0; i < n; i++)
       for(int j = 0; j < l; j++){
 	 result[j + i*l] = 0;
