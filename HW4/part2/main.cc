@@ -77,8 +77,6 @@ void matrix_multiply(const int n, const int m, const int l,
    for(int i = 0; i < n; i++)
       for(int j = 0; j < l; j++){
          cout << result[j + i*l] << " ";
-         if(j % l == l - 1)
-            cout << endl;
       }
 }
 void destruct_matrices(int *a_mat, int *b_mat){
