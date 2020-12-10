@@ -34,16 +34,17 @@ int main () {
     MPI_Init(NULL, NULL);
     double start_time = MPI_Wtime();
     int world_rank, world_size;
-    
-    construct_matrices(&n, &m, &l, &a_mat, &b_mat);
-    matrix_multiply(n, m, l, a_mat, b_mat);
-    destruct_matrices(a_mat, b_mat);
-    
-    double end_time = MPI_Wtime();
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    if(world_rank == 0){
+       construct_matrices(&n, &m, &l, &a_mat, &b_mat);
+       matrix_multiply(n, m, l, a_mat, b_mat);
+       destruct_matrices(a_mat, b_mat);
+       double end_time = MPI_Wtime();
+       printf("MPI running time: %lf Seconds\n", end_time - start_time);
+    }
     MPI_Finalize();
-    printf("MPI running time: %lf Seconds\n", end_time - start_time);
-
     return 0;
+    
 }
 void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr,
                         int **a_mat_ptr, int **b_mat_ptr){
@@ -68,10 +69,11 @@ void matrix_multiply(const int n, const int m, const int l,
                      const int *a_mat, const int *b_mat){
    int *result = (int*)malloc(sizeof(int)*n*l);
    for(int i = 0; i < n; i++)
-      for(int j = 0; j < l; j++)
-         for(int k = 0; k < m; k++){
+      for(int j = 0; j < l; j++){
+	 result[j + i*l] = 0;
+         for(int k = 0; k < m; k++)
             result[j + i*l] += a_mat[k + i*m] * b_mat[k*l + j];
-         }
+      }
    for(int i = 0; i < n; i++)
       for(int j = 0; j < l; j++){
          cout << result[j + i*l] << " ";
