@@ -40,7 +40,8 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     float stepY = (upperY - lowerY) / resY;
     /*------------------raccoon------------------------*/
     size_t size = resX * resY * sizeof(int);
-    int *temp = (int*)cudaHostAlloc(size);
+    int *temp;
+    cudaHostAlloc(&temp, size, cudaHostAllocMapped);
     int *result;
     size_t pitch;
     cudaMallocPitch(&result, &pitch, resX * sizeof(int), resY * sizeof(int));

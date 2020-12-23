@@ -37,7 +37,7 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     float stepY = (upperY - lowerY) / resY;
     /*------------------raccoon------------------------*/
     size_t size = resX * resY * sizeof(int);
-    int *temp = malloc(size);
+    int *temp = (int*)malloc(size);
     int* result;
     cudaMalloc(&result, size);
     cudaMemcpy(result, temp, size, cudaMemcpyHostToDevice);
