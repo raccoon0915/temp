@@ -7,8 +7,8 @@ __global__ void mandelKernel(float lowerX, float lowerY, float stepX, float step
     //
     // float x = lowerX + thisX * stepX;
     // float y = lowerY + thisY * stepY;
-    int thisX = blockIdx.x * blockDim.x + threadIdx.x;
-    int thisY = blockIdx.y * blockDim.y + threadIdx.y;
+    int thisX = blockIdx.x * blockDim.x + threadIdx.x * 2;
+    int thisY = blockIdx.y * blockDim.y + threadIdx.y * 2;
     for(int i = 0; i < 2; i++)
        for(int j = 0; j < 2; j++){
           float x = lowerX + (thisX + i) * stepX;
@@ -40,8 +40,9 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     /*------------------raccoon------------------------*/
     size_t size = resX * resY * sizeof(int);
     int *result;
-    cudaMalloc(&result, size);
-    cudaMemcpy(result, img, size, cudaMemcpyHostToDevice);
+    size_t pitch;
+    cudaMallocPitch(&result, &pitch, resX * sizeof(int), resY * sizeof(int));
+    //cudaMemcpy(result, img, size, cudaMemcpyHostToDevice);
     dim3 dimBlock(25, 40);
     dim3 dimGrid(resX / dimBlock.x / 2, resY / dimBlock.y / 2);
     mandelKernel <<<dimGrid, dimBlock>>>(lowerX, lowerY, stepX, stepY, maxIterations, result);
