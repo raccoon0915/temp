@@ -9,23 +9,22 @@ __global__ void mandelKernel(float lowerX, float lowerY, float stepX, float step
     // float y = lowerY + thisY * stepY;
     int thisX = blockIdx.x * blockDim.x + threadIdx.x;
     int thisY = blockIdx.y * blockDim.y + threadIdx.y;
-    for(int i = 0; i < 2; i++)
-       for(int j = 0; j < 2; j++){
-          float x = lowerX + (thisX + i) * stepX;
-          float y = lowerY + (thisY + j) * stepY;
-          float z_re = x, z_im = y;
-          int ii;
-          for (ii = 0; ii < maxIterations; ++ii)
-          {
-             if (z_re * z_re + z_im * z_im > 4.f)
-                break;
-             float new_re = z_re * z_re - z_im * z_im;
-             float new_im = 2.f * z_re * z_im;
-             z_re = x + new_re;
-             z_im = y + new_im;
-          }
-          result[(thisY + j) * gridDim.x * blockDim.x + (thisX + i)] = ii;
+    float x = lowerX + thisX * stepX;
+    float y = lowerY + thisY * stepY;
+    float z_re = x, z_im = y;
+    int i;
+    for (i = 0; i < maxIterations; ++i)
+    {
+
+      if (z_re * z_re + z_im * z_im > 4.f)
+        break;
+
+      float new_re = z_re * z_re - z_im * z_im;
+      float new_im = 2.f * z_re * z_im;
+      z_re = x + new_re;
+      z_im = y + new_im;
     }
+    result[thisY * gridDim.x * blockDim.x + thisX] = i;
     
 }
 
@@ -40,10 +39,11 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     /*------------------raccoon------------------------*/
     size_t size = resX * resY * sizeof(int);
     int *result;
-    cudaMalloc(&result, size);
-    cudaMemcpy(result, img, size, cudaMemcpyHostToDevice);
+    size_t pitch;
+    cudaMallocPitch(&result, &pitch, resX * sizeof(int), resY * sizeof(int));
+    //cudaMemcpy(result, img, size, cudaMemcpyHostToDevice);
     dim3 dimBlock(25, 40);
-    dim3 dimGrid(resX / dimBlock.x / 2, resY / dimBlock.y / 2);
+    dim3 dimGrid(resX / dimBlock.x, resY / dimBlock.y);
     mandelKernel <<<dimGrid, dimBlock>>>(lowerX, lowerY, stepX, stepY, maxIterations, result);
     cudaMemcpy(img, result, size, cudaMemcpyDeviceToHost);
     cudaFree(result);
