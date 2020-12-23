@@ -59,16 +59,16 @@ bool verifyResult(int *gold, int *result, int width, int height)
 
     int i, j;
 
-    for (i = 0; i < height; i++)
+    for (i = 0; i < height; i++)/*raccoon:i<height*/
     {
-        for (j = 0; j < width; j++)
+        for (j = 0; j < width; j++)/*raccoon:j<width*/
         {
             if (abs(gold[i * width + j] - result[i * width + j]) > 0)
             {
                 printf("Mismatch : [%d][%d], Expected : %d, Actual : %d\n",
                        i, j, gold[i * width + j], result[i * width + j]);
                 return 0;
-            }
+	    }
         }
     }
 

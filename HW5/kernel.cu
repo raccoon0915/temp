@@ -2,13 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-__global__ void mandelKernel(float lowerX, float lowerY, float stepX, float stepY, int maxIterations, float* result) {
+__global__ void mandelKernel(float lowerX, float lowerY, float stepX, float stepY, int maxIterations, int* result) {
     // To avoid error caused by the floating number, use the following pseudo code
     //
     // float x = lowerX + thisX * stepX;
     // float y = lowerY + thisY * stepY;
-    int thisX = blockIdx.x * 40 + threadIdx.x;
-    int thisY = blockIdx.y * 30 + threadIdx.y;
+    int thisX = blockIdx.x * blockDim.x + threadIdx.x;
+    int thisY = blockIdx.y * blockDim.y + threadIdx.y;
     float x = lowerX + thisX * stepX;
     float y = lowerY + thisY * stepY;
     float z_re = x, z_im = y;
@@ -24,7 +24,7 @@ __global__ void mandelKernel(float lowerX, float lowerY, float stepX, float step
       z_re = x + new_re;
       z_im = y + new_im;
     }
-    result[thisY * 1600 + thisX] = i;
+    result[thisY * gridDim.x * blockDim.x + thisX] = i;
 }
 
 // Host front-end function that allocates the memory and launches the GPU kernel
@@ -36,10 +36,13 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     float stepX = (upperX - lowerX) / resX;
     float stepY = (upperY - lowerY) / resY;
     /*------------------raccoon------------------------*/
-    size_t size = resX * resY * sizeof(float);
-    float *result = cudaMalloc(&result, size);
-    dim3 dimBlock(40, 30);
+    size_t size = resX * resY * sizeof(int);
+    int* result;
+    cudaMalloc(&result, size);
+    cudaMemcpy(result, img, size, cudaMemcpyHostToDevice);
+    dim3 dimBlock(40, 25);
     dim3 dimGrid(resX / dimBlock.x, resY / dimBlock.y);
-    mandleKernel <<<dimGrid, dimBlock>>>(lowerX, lowerY, stepX, stepY, maxIterations, result);
+    mandelKernel <<<dimGrid, dimBlock>>>(lowerX, lowerY, stepX, stepY, maxIterations, result);
     cudaMemcpy(img, result, size, cudaMemcpyDeviceToHost);
+    cudaFree(result);
 }
