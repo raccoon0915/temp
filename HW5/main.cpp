@@ -206,7 +206,7 @@ int main(int argc, char **argv)
 
     double minThread = 0;
     double recordThread[10] = {0};
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 1; ++i)/*raccoon:i=10*/
     {
         memset(output_thread, 0, width * height * sizeof(int));
         double startTime = CycleTimer::currentSeconds();
