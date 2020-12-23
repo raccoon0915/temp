@@ -25,6 +25,7 @@ __global__ void mandelKernel(float lowerX, float lowerY, float stepX, float step
       z_im = y + new_im;
     }
     result[thisY * gridDim.x * blockDim.x + thisX] = i;
+    
 }
 
 // Host front-end function that allocates the memory and launches the GPU kernel
@@ -37,10 +38,11 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     float stepY = (upperY - lowerY) / resY;
     /*------------------raccoon------------------------*/
     size_t size = resX * resY * sizeof(int);
-    int* result;
-    cudaMalloc(&result, size);
-    cudaMemcpy(result, img, size, cudaMemcpyHostToDevice);
-    dim3 dimBlock(40, 25);
+    int *result;
+    size_t pitch;
+    cudaMallocPitch(&result, &pitch, resX * sizeof(int), resY * sizeof(int));
+    //cudaMemcpy(result, img, size, cudaMemcpyHostToDevice);
+    dim3 dimBlock(25, 40);
     dim3 dimGrid(resX / dimBlock.x, resY / dimBlock.y);
     mandelKernel <<<dimGrid, dimBlock>>>(lowerX, lowerY, stepX, stepY, maxIterations, result);
     cudaMemcpy(img, result, size, cudaMemcpyDeviceToHost);
