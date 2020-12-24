@@ -40,10 +40,9 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     int *temp = (int*)malloc(size);
     int* result;
     cudaMalloc(&result, size);
-    cudaMemcpy(result, temp, size, cudaMemcpyHostToDevice);
     dim3 dimBlock(40, 25);
     dim3 dimGrid(resX / dimBlock.x, resY / dimBlock.y);
     mandelKernel <<<dimGrid, dimBlock>>>(lowerX, lowerY, stepX, stepY, maxIterations, result);
-    cudaMemcpy(img, result, size, cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(img, result, size, cudaMemcpyDeviceToHost, 0);
     cudaFree(result);
 }
