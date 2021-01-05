@@ -1,0 +1,6 @@
+/home/raccoon/Desktop/OS/tarfs
+/home/raccoon/Desktop/OS/tarfs/d
+/home/raccoon/Desktop/OS/tarfs/d1/d2
+/home/raccoon/Desktop/OS/tarfs
+./testcase/1.txt: line 9: cd: largefiles: No such file or directory
+/home/raccoon/Desktop/OS/tarfs/d2

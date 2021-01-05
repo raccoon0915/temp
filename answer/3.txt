@@ -1,0 +1,38 @@
+tarfs:
+total 0
+drwxr-xr-x 0 raccoon raccoon 0 十二 31  2019 d
+drwxrwxr-x 0 raccoon raccoon 0 十二 31  2019 d1
+drwxrwxr-x 0 raccoon raccoon 0 十二 31  2019 d2
+
+tarfs/d:
+total 0
+drwxrwxr-x 0 raccoon raccoon 0 十二 31  2019 d2
+-rw-r--r-- 0 raccoon raccoon 0 十一 29  2019 empty_file
+
+tarfs/d/d2:
+total 0
+-rw-rw-r-- 0 raccoon raccoon 25 十二 31  2019 t1.txt
+-rw-rw-r-- 0 raccoon raccoon 21 十二 31  2019 test.txt
+
+tarfs/d1:
+total 0
+-rw-rw-r-- 0 raccoon raccoon  8 十一 29  2019 141.txt
+-rw-rw-r-- 0 raccoon raccoon 13 十二 31  2019 8.txt
+drwxrwxr-x 0 raccoon raccoon  0 十二 31  2019 d2
+-rw-r--r-- 0 raccoon raccoon  0 十一 29  2019 empty_file
+
+tarfs/d1/d2:
+total 0
+-rw-rw-r-- 0 raccoon raccoon   9 十一 20  2019 3451.txt
+-rw-rw-r-- 0 raccoon raccoon 168 十一 20  2019 hello_world.html
+
+tarfs/d2:
+total 0
+drwxrwxr-x 0 raccoon raccoon    0  一   1  2020 largefile
+-rw-rw-r-- 0 raccoon raccoon 1613 十一 20  2015 tar.html
+
+tarfs/d2/largefile:
+total 0
+-rw-rw-r-- 0 raccoon raccoon 10240 十二 31  2019 10kb.txt
+-rw-rw-r-- 0 raccoon raccoon 11264 十二 31  2019 11kb.txt
+-rw-rw-r-- 0 raccoon raccoon  8195 十二 31  2019 more.txt
