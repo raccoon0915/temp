@@ -1,7 +1,7 @@
 NVCC = nvcc
 CXX=g++
 CXXFLAGS=-I./common -Iobjs/ -O3 -std=c++17 -Wall -g -fPIC -lm
-
+CC=gcc-10
 APP_NAME=mandelbrot
 OBJDIR=objs
 COMMONDIR=./common
@@ -23,18 +23,20 @@ dirs:
 clean:
 		/bin/rm -rf $(OBJDIR) *.ppm *~ $(APP_NAME)
 
-OBJS=$(OBJDIR)/main.o $(OBJDIR)/kernel.o $(OBJDIR)/mandelbrotSerial.o $(OBJDIR)/mandelbrotThread.o $(PPM_OBJ)
-
+OBJS=$(OBJDIR)/main.o $(OBJDIR)/kernel.o $(OBJDIR)/mandelbrotSerial.o $(OBJDIR)/mandelbrotThread.o $(PPM_OBJ) $(OBJDIR)/bmpfuncs.o $(OBJDIR)/helper.o 
 $(APP_NAME): dirs $(OBJS)
 		$(NVCC) ${CUDA_LINK_FLAGS} -o $@ $(OBJS) mandelbrotThreadRef.a
 
 $(OBJDIR)/%.o: %.cpp
 		$(CXX) $< $(CXXFLAGS) -c -o $@
-
-$(OBJDIR)/%.o: $(COMMONDIR)/%.cpp
+$(OBJDIR)/%.o: $(COMMONDIR)/%.cpp 
 	$(CXX) $< $(CXXFLAGS) -c -o $@
-
 $(OBJDIR)/main.o: $(COMMONDIR)/CycleTimer.h kernel.h
 
-$(OBJDIR)/kernel.o : kernel.cu kernel.h
+$(OBJDIR)/kernel.o : kernel.cu kernel.h 
 	${NVCC} ${CUDA_COMPILE_FLAGS} -c kernel.cu -o $@
+$(OBJDIR)/helper.o : helper.c
+	$(CC) -c $< -o $@
+$(OBJDIR)/bmpfuncs.o : bmpfuncs.c
+	$(CC) -c $< -o $@
+

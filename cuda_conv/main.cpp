@@ -4,7 +4,8 @@
 #include <getopt.h>
 #include "bmpfuncs.h"
 #include "CycleTimer.h"
-
+#include "helper.h"
+//extern void float* readFilter(const char *filename, int *filterWidth);
 extern void mandelbrotSerial(
     float x0, float y0, float x1, float y1,
     int width, int height,
@@ -12,11 +13,9 @@ extern void mandelbrotSerial(
     int maxIterations,
     int output[]);
 
-extern void mandelbrotThread(
-    float x0, float y0, float x1, float y1,
-    int width, int height,
-    int maxIterations,
-    int output[]);
+extern void mandelbrotThread(float* inputImage, float* outputImage,
+		float* filter, int imageWidth, int imageHeight,
+		int filterWidth);
 
 extern void mandelbrotThreadRef(
     float x0, float y0, float x1, float y1,
@@ -244,7 +243,7 @@ int main(int argc, char **argv)
     }
     minThread /= 4;
 
-    printf("[mandelbrot thread]:\t\t[%.3f] ms\n", minThread * 1000);
+    printf("[convolution]:\t\t[%.3f] ms\n", minThread * 1000);
     writePPMImage(output_thread, width, height, "mandelbrot-thread.ppm", maxIterations);
 
     if (!verifyResult(output_test, output_thread, width, height))

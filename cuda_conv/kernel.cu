@@ -12,7 +12,7 @@ __global__ void convolution(float* inputImage , float* outputImage, float* filte
     float sum = 0;
     int halffilterSize = filterWidth / 2;
     int k, l;
-    for(k = -halffilterSize; k <= haltfilterSize; k++){
+    for(k = -halffilterSize; k <= halffilterSize; k++){
 	    for(l = halffilterSize; l <=halffilterSize; l++){
 		    if(i + k >= 0 && i + k < imageHeight && j + l >= 0 && j + l < imageWidth){
 			    sum += inputImage[(i + k) * imageWidth + j + l] * 
@@ -42,7 +42,7 @@ void hostFE (float* inputImage, float* outputImage, float* filter, int imageWidt
     cudaMemcpy(kernel_filter, filter, filterSize, cudaMemcpyHostToDevice);
     dim3 dimBlock(8, 8);
     dim3 dimGrid(imageWidth / dimBlock.x, imageHeight / dimBlock.y);
-    convolution <<<dimGrid, dimBlock>>>(, lowerY, stepX, stepY, maxIterations, result);
-    cudaMemcpy(img, result, size, cudaMemcpyDeviceToHost);
-    cudaFree(result);
+    convolution <<<dimGrid, dimBlock>>>(source_image, output_image, kernel_filter, imageWidth, imageHeight, filterWidth);
+//    cudaMemcpy(, result, size, cudaMemcpyDeviceToHost);
+//    cudaFree(result);
 }
