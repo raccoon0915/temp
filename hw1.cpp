@@ -97,10 +97,12 @@ int main(int argc, char**argv){
 			}
 			else f_type(path, fp);
 		/*----------------------NAME--------------------------*/
-			if(fp == NULL && FD[i] == "fd")
+			if(errno == 13 && FD[i] == "fd")
 				cout << path << " (opendir: Permission denied)" << endl;
-			else if(fp == NULL)
+			else if(errno == 13)/*raccoon:13=permission denied*/
 				cout << path << " (readlink: Permission denied)" << endl;
+			else if(errno == 2)/*raccoon:2=no such file*/
+				cout << path << endl;
 			else{
 				readlink(path, temp, sizeof(temp));
 				cout << temp << endl;
