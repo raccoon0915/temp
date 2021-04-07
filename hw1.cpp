@@ -18,14 +18,41 @@
 #include<iomanip>
 using namespace std;
 char path[100], temp[1024];/*raccoon:print buffer*/
+char arg_path[100];/*raccoon:special for argument*/
 const char *FD[3] = {"cwd", "root", "exe"};
+bool cFlag=false, tFlag=false, fFlag=false;
+string commFilter, typeFilter, nameFilter;
 
 void f_type(char* path, FILE* fp);
 void prefix(long pid);
 char f_mode(long pid, long fd);
+int argument(long pid);
 
 int main(int argc, char**argv){
 	long tgid;
+	int i=0;
+	for(;;){
+	  if(argv[i] == NULL)
+	    break;
+	  else if(strcmp(argv[i], "-c")==0){
+	    cFlag=true;  commFilter=argv[i+1];}
+	  else if(strcmp(argv[i], "-f")==0){
+	    fFlag=true;  nameFilter=argv[i+1];}
+	  else if(strcmp(argv[i], "-t")==0){
+	    tFlag=true;  typeFilter=argv[i+1];}
+	  i++;
+	}
+	if(tFlag && (typeFilter != "REG" && typeFilter != "DIR" && typeFilter != "CHR" && typeFilter != "FIFO" && typeFilter != "SOCK" && typeFilter != "unknown")){
+	  cout << "Invalid TYPE option." << endl;
+	  return 0;
+	}
+	/*cout << "cFlag=" << cFlag << endl;
+	cout << "tFlag=" << tFlag << endl;
+	cout << "fFlag=" << fFlag << endl;
+	cout << "typeFilter=" << typeFilter << endl;
+	cout << "nameFilter=" << nameFilter << endl;
+	cout << "commFilter=" << commFilter << endl;
+	return 0;*/
 	struct dirent* ent;
 	FILE* fp;
 	DIR* proc = opendir("/proc");
@@ -44,6 +71,9 @@ int main(int argc, char**argv){
 		tgid = strtol(ent->d_name, NULL, 10);
 		for(int i=0; i<3; i++){
 		/*---------------root, cwd, exe FD-------------------*/
+		  /*-----------------special for argument--------------*/
+		  if(argument(tgid) == 2)continue;
+		  /*-----------------special for argument--------------*/
 		  prefix(tgid);
 	          cout << setw(14) <<FD[i];/*raccoon:FD*/
 		/*------------------------TYPE-----------------------*/
@@ -58,8 +88,6 @@ int main(int argc, char**argv){
 		/*-----------------------NAME------------------------*/
 		  if(errno == 13)/*raccoon:13=permission denied*/
 				cout << setw(12) << path << " (readlink: Permission denied)" << endl;
-//		  else if(errno == 2)/*raccoon:2=no such file*/
-//			cout << path << endl;
 		  else{
 		  	readlink(path, temp, sizeof(temp));
 		  	string str = temp;
@@ -82,6 +110,7 @@ int main(int argc, char**argv){
    		    ss >> a >> b >> c >> d >> e;
     		  /*raccoon:Cannot handle final delete.*/
     		  if(e != "0" && e != temp_s){
+    		    if(argument(tgid) == 2)continue;
     		    prefix(tgid);
     		    if(line.find("(deleted)") != -1){
     		      cout << setw(14) <<"del";/*raccoon:FD*/
@@ -111,6 +140,7 @@ int main(int argc, char**argv){
   		sprintf(path, "/proc/%ld/fd", tgid);
   		fp = fopen(path, "r");
   		if(errno == 13){
+  		  if(argument(tgid) == 2)continue;
   		  prefix(tgid);
   		  /*raccoon:empty NOFD, TYPE, node*/
   		  cout << setw(14) <<"NOFD";
@@ -136,6 +166,9 @@ int main(int argc, char**argv){
   		    fd_name = fd_ent->d_name;
   		    fd_name.push_back(permission);
   		    /*---------------root, cwd, exe FD-------------------*/
+  		    /*-------------special for argument--------------*/
+  		    if(argument(tgid) == 2)continue;
+  		    /*-------------special for argument--------------*/
   		    prefix(tgid);
   		    /*raccoon:FD*/
   		    cout << setw(14) << fd_name;
@@ -214,4 +247,28 @@ char f_mode(long pid, long fd){
     case '2':	return 'u';	break;
     default:	return ' ';	break;
   }
+}
+/*0=nothing 1=filter work 2=filter miss*/
+int argument(long pid){
+  if(cFlag){
+    FILE* fp;
+    sprintf(arg_path, "/proc/%ld/comm", pid);
+    fp = fopen(arg_path, "r");
+    if(fp != NULL){
+      fscanf(fp, "%s", temp);
+      string str = temp;
+      if(str.find(commFilter) != -1){
+        memset(temp, 0, sizeof(temp));
+        if(fp != NULL)fclose(fp);  
+        return 1;
+      }
+      else{
+        memset(temp, 0, sizeof(temp));
+        if(fp != NULL)fclose(fp);
+        return 2;
+      }
+    }
+    else return 2;
+   }
+   else return 0;	
 }
