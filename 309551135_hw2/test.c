@@ -4,6 +4,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<fcntl.h>
+#include<stdlib.h>
 int main(int argc, char** argv){
 /*--------------------------close-----------------------------*/
 /*  int fd = open("test.txt", O_RDONLY | O_CREAT);
@@ -17,10 +18,11 @@ int main(int argc, char** argv){
   fp = fopen("test.txt", "w");
   fclose(fp);  */
 /*--------------------------fread-----------------------------*/
-  char buffer[100];
+  char* buffer = malloc(sizeof(char)*10);
+  size_t ret = 0;
   FILE* fp = fopen("test.txt", "r");
-  fread(buffer, 100, 1, fp);
-  printf("fread output = %s", buffer);
-  fclose(fp);
+  ret = fread(buffer, 3, 3, fp);
+  printf("fread output is %s, return is %lu\n", buffer, ret);
+/*--------------------------*/  
   return 0;
 }
